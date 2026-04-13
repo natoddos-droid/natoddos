@@ -1,5 +1,6 @@
 const { REST, Routes } = require('discord.js');
 require('dotenv').config();
+const updateStats = require('../utils/updateStats'); // ← DODANE
 
 module.exports = {
     name: 'ready',
@@ -20,5 +21,10 @@ module.exports = {
         } catch (error) {
             console.error(error);
         }
+
+        // 🔥 DODANE — aktualizacja statystyk przy starcie bota
+        client.guilds.cache.forEach(guild => {
+            updateStats(guild);
+        });
     },
 };
