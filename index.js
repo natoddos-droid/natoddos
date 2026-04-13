@@ -1,5 +1,7 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -11,8 +13,36 @@ const client = new Client({
     ]
 });
 
-client.once('ready', () => {
-    console.log(`Bot zalogowany jako ${client.user.tag}`);
-});
+client.commands = new Collection();
+
+// Ładowanie komend
+const commandsPath = path.join(__dirname, 'src/commands');
+const commandFolders = fs.readdirSync(commandsPath);
+
+for (const folder of commandFolders) {
+    const folderPath = path.join(commandsPath, folder);
+    const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+
+    for (const file of commandFiles) {
+        const filePath = path.join(folderPath, file);
+        const command = require(filePath);
+        client.commands.set(command.data.name, command);
+    }
+}
+
+// Ładowanie eventów
+const eventsPath = path.join(__dirname, 'src/events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const event = require(filePath);
+
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args, client));
+    }
+}
 
 client.login(process.env.TOKEN);
