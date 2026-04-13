@@ -5,7 +5,7 @@ module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
-        console.log(`Zalogowano jako ${client.user.tag}`);
+        console.log(`Bot zalogowany jako ${client.user.tag}`);
 
         const commands = client.commands.map(cmd => cmd.data.toJSON());
         const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
