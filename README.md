@@ -1,2 +1,0 @@
-# natoddos
-natoddos
