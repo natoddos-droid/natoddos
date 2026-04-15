@@ -35,6 +35,7 @@ module.exports = {
             const guild = interaction.guild;
 
             const categoryId = '1491474974878208270'; // Twoja kategoria
+            const ownerRoleId = '1491425920391581747'; // Rola właściciela
 
             // Sprawdzenie czy user ma już ticket tego typu
             const existing = guild.channels.cache.find(
@@ -64,6 +65,15 @@ module.exports = {
                             PermissionFlagsBits.ViewChannel,
                             PermissionFlagsBits.SendMessages,
                             PermissionFlagsBits.ReadMessageHistory
+                        ]
+                    },
+                    {
+                        id: ownerRoleId, // właściciele widzą wszystkie tickety
+                        allow: [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.SendMessages,
+                            PermissionFlagsBits.ReadMessageHistory,
+                            PermissionFlagsBits.ManageChannels
                         ]
                     }
                 ]
