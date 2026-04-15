@@ -116,5 +116,33 @@ module.exports = {
                 channel.delete().catch(() => {});
             }, 3000);
         }
+
+        // --- GIVEAWAY JOIN / LEAVE ---
+        if (interaction.isButton() && interaction.customId === 'join_giveaway') {
+
+            const data = JSON.parse(fs.readFileSync('./giveawayData.json', 'utf8'));
+
+            // Jeśli user już jest → usuń go
+            if (data.participants.includes(interaction.user.id)) {
+
+                data.participants = data.participants.filter(id => id !== interaction.user.id);
+
+                fs.writeFileSync('./giveawayData.json', JSON.stringify(data, null, 4));
+
+                return interaction.reply({
+                    content: '❌ Wyszedłeś z giveaway.',
+                    ephemeral: true
+                });
+            }
+
+            // Jeśli user nie jest → dodaj go
+            data.participants.push(interaction.user.id);
+            fs.writeFileSync('./giveawayData.json', JSON.stringify(data, null, 4));
+
+            return interaction.reply({
+                content: '🎉 Dołączyłeś do giveaway!',
+                ephemeral: true
+            });
+        }
     },
 };
