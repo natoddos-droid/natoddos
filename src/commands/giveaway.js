@@ -39,19 +39,20 @@ module.exports = {
             .setColor('#2b2d31')
             .setTitle('🎉 Giveaway!')
             .setDescription(
-                `**Nagroda:** ${prize}\n` +
-                `**Wymagania:** ${req}\n` +
-                `**Zwycięzców:** ${winners}\n\n` +
+                `🏆 **Nagroda:** ${prize}\n` +
+                `📋 **Wymagania:** ${req}\n` +
+                `🥇 **Zwycięzców:** ${winners}\n\n` +
                 `⏳ Obliczanie czasu...`
             )
             .setFooter({ text: 'Giveaway trwa...' });
 
+        // WAŻNE: fetchReply musi być true, żeby mieć msg.id
         const msg = await interaction.reply({
             embeds: [embed],
             components: [
                 new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
-                        .setCustomId(`join_giveaway_${interaction.id}`)
+                        .setCustomId(`join_giveaway_${msg.id}`) // POPRAWIONE
                         .setLabel('Dołącz 🎉')
                         .setStyle(ButtonStyle.Success)
                 )
@@ -111,7 +112,7 @@ function updateGiveaway(client) {
                     .setTitle('🎉 Giveaway zakończony!')
                     .setDescription(
                         g.participants.length
-                            ? `**Nagroda:** ${g.prize}\n🎉 **Zwycięzcy:**\n${winnersList.join('\n')}`
+                            ? `🏆 **Nagroda:** ${g.prize}\n🎉 **Zwycięzcy:**\n${winnersList.join('\n')}`
                             : 'Brak uczestników!'
                     );
 
@@ -134,10 +135,10 @@ function updateGiveaway(client) {
                 .setColor('#2b2d31')
                 .setTitle('🎉 Giveaway!')
                 .setDescription(
-                    `**Nagroda:** ${g.prize}\n` +
-                    `**Wymagania:** ${g.requirements}\n` +
-                    `**Zwycięzców:** ${g.winners}\n` +
-                    `**Uczestnicy:** ${g.participants.length}\n\n` +
+                    `🏆 **Nagroda:** ${g.prize}\n` +
+                    `📋 **Wymagania:** ${g.requirements}\n` +
+                    `🥇 **Zwycięzców:** ${g.winners}\n` +
+                    `👥 **Uczestnicy:** ${g.participants.length}\n\n` +
                     `⏳ **Pozostały czas:** ${timeString}`
                 )
                 .setFooter({ text: 'Giveaway trwa...' });
