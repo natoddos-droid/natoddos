@@ -34,11 +34,11 @@ module.exports = {
         // --- SELECT MENU TICKETÓW ---
         if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_select') {
 
-            const choice = interaction.values[0]; // zakup / pomoc
+            const choice = interaction.values[0];
             const guild = interaction.guild;
 
-            const categoryId = '1491474974878208270'; // Twoja kategoria
-            const ownerRoleId = '1491425920391581747'; // Rola właściciela
+            const categoryId = '1491474974878208270';
+            const ownerRoleId = '1491425920391581747';
 
             // --- NUMERACJA TICKETÓW ---
             let counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
@@ -48,7 +48,6 @@ module.exports = {
             const ticketNumber = counter.count;
             const channelName = `${choice}-${ticketNumber}`;
 
-            // Tworzenie kanału ticketu
             const channel = await guild.channels.create({
                 name: channelName,
                 type: ChannelType.GuildText,
@@ -67,7 +66,7 @@ module.exports = {
                         ]
                     },
                     {
-                        id: ownerRoleId, // właściciele widzą wszystkie tickety
+                        id: ownerRoleId,
                         allow: [
                             PermissionFlagsBits.ViewChannel,
                             PermissionFlagsBits.SendMessages,
@@ -117,17 +116,28 @@ module.exports = {
             }, 3000);
         }
 
-        // --- GIVEAWAY JOIN / LEAVE ---
-        if (interaction.isButton() && interaction.customId === 'join_giveaway') {
+        // --- GIVEAWAY JOIN / LEAVE (PER GIVEAWAY ID) ---
+        if (interaction.isButton() && interaction.customId.startsWith('join_giveaway_')) {
 
-            const data = JSON.parse(fs.readFileSync('./giveawayData.json', 'utf8'));
+            const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
+
+            const giveawayId = interaction.customId.replace('join_giveaway_', '');
+
+            if (!db.giveaways[giveawayId]) {
+                return interaction.reply({
+                    content: 'Ten giveaway już nie istnieje.',
+                    ephemeral: true
+                });
+            }
+
+            const g = db.giveaways[giveawayId];
 
             // Jeśli user już jest → usuń go
-            if (data.participants.includes(interaction.user.id)) {
+            if (g.participants.includes(interaction.user.id)) {
 
-                data.participants = data.participants.filter(id => id !== interaction.user.id);
+                g.participants = g.participants.filter(id => id !== interaction.user.id);
 
-                fs.writeFileSync('./giveawayData.json', JSON.stringify(data, null, 4));
+                fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
                 return interaction.reply({
                     content: '❌ Wyszedłeś z giveaway.',
@@ -136,8 +146,8 @@ module.exports = {
             }
 
             // Jeśli user nie jest → dodaj go
-            data.participants.push(interaction.user.id);
-            fs.writeFileSync('./giveawayData.json', JSON.stringify(data, null, 4));
+            g.participants.push(interaction.user.id);
+            fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
             return interaction.reply({
                 content: '🎉 Dołączyłeś do giveaway!',
