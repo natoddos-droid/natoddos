@@ -7,6 +7,9 @@ const {
     ButtonStyle
 } = require('discord.js');
 
+const fs = require('fs');
+const counterPath = './ticketCounter.json';
+
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction) {
@@ -37,21 +40,17 @@ module.exports = {
             const categoryId = '1491474974878208270'; // Twoja kategoria
             const ownerRoleId = '1491425920391581747'; // Rola właściciela
 
-            // Sprawdzenie czy user ma już ticket tego typu
-            const existing = guild.channels.cache.find(
-                ch => ch.name === `${choice}-${interaction.user.id}`
-            );
+            // --- NUMERACJA TICKETÓW ---
+            let counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
+            counter.count++;
+            fs.writeFileSync(counterPath, JSON.stringify(counter, null, 4));
 
-            if (existing) {
-                return interaction.reply({
-                    content: 'Masz już otwarty ticket tego typu!',
-                    ephemeral: true
-                });
-            }
+            const ticketNumber = counter.count;
+            const channelName = `${choice}-${ticketNumber}`;
 
             // Tworzenie kanału ticketu
             const channel = await guild.channels.create({
-                name: `${choice}-${interaction.user.id}`,
+                name: channelName,
                 type: ChannelType.GuildText,
                 parent: categoryId,
                 permissionOverwrites: [
@@ -81,7 +80,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor('#2b2d31')
-                .setTitle('🎫 Ticket otwarty')
+                .setTitle(`🎫 Ticket #${ticketNumber}`)
                 .setDescription(`Wybrałeś kategorię: **${choice.toUpperCase()}**.\nNapisz swoją wiadomość poniżej.`);
 
             const row = new ActionRowBuilder().addComponents(
@@ -92,7 +91,7 @@ module.exports = {
             );
 
             await channel.send({
-                content: `<@${interaction.user.id}>`,
+                content: `@everyone <@${interaction.user.id}>`,
                 embeds: [embed],
                 components: [row]
             });
