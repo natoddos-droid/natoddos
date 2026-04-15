@@ -46,13 +46,11 @@ module.exports = {
             )
             .setFooter({ text: 'Giveaway trwa...' });
 
-        // 1. Najpierw wysyłamy wiadomość
         const msg = await interaction.reply({
             embeds: [embed],
             fetchReply: true
         });
 
-        // 2. Teraz tworzymy przycisk z poprawnym ID
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`join_giveaway_${msg.id}`)
@@ -122,7 +120,9 @@ function updateGiveaway(client) {
 
                 await msg.edit({ embeds: [endEmbed], components: [] });
 
-                delete db.giveaways[id];
+                // NIE USUWAMY JUŻ g Z BAZY
+                // Możesz ewentualnie dodać tu flagę:
+                // g.ended = true;
                 fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
                 continue;
