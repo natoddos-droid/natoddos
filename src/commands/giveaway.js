@@ -46,29 +46,33 @@ module.exports = {
             )
             .setFooter({ text: 'Giveaway trwa...' });
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('join_giveaway')
-                .setLabel('Dołącz 🎉')
-                .setStyle(ButtonStyle.Success)
-        );
-
         const msg = await interaction.reply({
             embeds: [embed],
-            components: [row],
+            components: [
+                new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`join_giveaway_${interaction.id}`)
+                        .setLabel('Dołącz 🎉')
+                        .setStyle(ButtonStyle.Success)
+                )
+            ],
             fetchReply: true
         });
 
-        const data = {
+        const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
+
+        db.giveaways[msg.id] = {
             participants: [],
-            messageId: msg.id,
             prize: prize,
             requirements: req,
             endTime: endTime,
-            winners: winners
+            winners: winners,
+            buttonId: `join_giveaway_${msg.id}`,
+            messageId: msg.id,
+            channelId: msg.channel.id
         };
 
-        fs.writeFileSync('./giveawayData.json', JSON.stringify(data, null, 4));
+        fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
         updateGiveaway(interaction.client);
     }
@@ -77,67 +81,69 @@ module.exports = {
 function updateGiveaway(client) {
     setInterval(async () => {
         const fs = require('fs');
-        const data = JSON.parse(fs.readFileSync('./giveawayData.json', 'utf8'));
+        const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
 
-        if (!data.messageId) return;
+        for (const id of Object.keys(db.giveaways)) {
+            const g = db.giveaways[id];
 
-        const channel = client.channels.cache.find(ch =>
-            ch.messages?.cache.has(data.messageId)
-        );
+            const channel = client.channels.cache.get(g.channelId);
+            if (!channel) continue;
 
-        if (!channel) return;
+            const msg = await channel.messages.fetch(g.messageId).catch(() => null);
+            if (!msg) continue;
 
-        const msg = await channel.messages.fetch(data.messageId).catch(() => null);
-        if (!msg) return;
+            const now = Date.now();
+            const remaining = g.endTime - now;
 
-        const now = Date.now();
-        const remaining = data.endTime - now;
+            if (remaining <= 0) {
 
-        if (remaining <= 0) {
+                let winnersList = [];
 
-            let winnersList = [];
-
-            if (data.participants.length) {
-                for (let i = 0; i < data.winners; i++) {
-                    const winner = data.participants[Math.floor(Math.random() * data.participants.length)];
-                    winnersList.push(`<@${winner}>`);
+                if (g.participants.length) {
+                    for (let i = 0; i < g.winners; i++) {
+                        const winner = g.participants[Math.floor(Math.random() * g.participants.length)];
+                        winnersList.push(`<@${winner}>`);
+                    }
                 }
+
+                const endEmbed = new EmbedBuilder()
+                    .setColor('#2b2d31')
+                    .setTitle('🎉 Giveaway zakończony!')
+                    .setDescription(
+                        g.participants.length
+                            ? `**Nagroda:** ${g.prize}\n🎉 **Zwycięzcy:**\n${winnersList.join('\n')}`
+                            : 'Brak uczestników!'
+                    );
+
+                await msg.edit({ embeds: [endEmbed], components: [] });
+
+                delete db.giveaways[id];
+                fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
+
+                continue;
             }
 
-            const endEmbed = new EmbedBuilder()
+            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((remaining / (1000 * 60)) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+
+            const timeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+            const embed = new EmbedBuilder()
                 .setColor('#2b2d31')
-                .setTitle('🎉 Giveaway zakończony!')
+                .setTitle('🎉 Giveaway!')
                 .setDescription(
-                    data.participants.length
-                        ? `**Nagroda:** ${data.prize}\n🎉 **Zwycięzcy:**\n${winnersList.join('\n')}`
-                        : 'Brak uczestników!'
-                );
+                    `**Nagroda:** ${g.prize}\n` +
+                    `**Wymagania:** ${g.requirements}\n` +
+                    `**Zwycięzców:** ${g.winners}\n` +
+                    `**Uczestnicy:** ${g.participants.length}\n\n` +
+                    `⏳ **Pozostały czas:** ${timeString}`
+                )
+                .setFooter({ text: 'Giveaway trwa...' });
 
-            await msg.edit({ embeds: [endEmbed], components: [] });
-
-            return;
+            await msg.edit({ embeds: [embed] });
         }
-
-        const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((remaining / (1000 * 60)) % 60);
-        const seconds = Math.floor((remaining / 1000) % 60);
-
-        const timeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-        const embed = new EmbedBuilder()
-            .setColor('#2b2d31')
-            .setTitle('🎉 Giveaway!')
-            .setDescription(
-                `**Nagroda:** ${data.prize}\n` +
-                `**Wymagania:** ${data.requirements}\n` +
-                `**Zwycięzców:** ${data.winners}\n` +
-                `**Uczestnicy:** ${data.participants.length}\n\n` +
-                `⏳ **Pozostały czas:** ${timeString}`
-            )
-            .setFooter({ text: 'Giveaway trwa...' });
-
-        await msg.edit({ embeds: [embed] });
 
     }, 10000);
 }
