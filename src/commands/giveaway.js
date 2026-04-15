@@ -46,18 +46,22 @@ module.exports = {
             )
             .setFooter({ text: 'Giveaway trwa...' });
 
-        // WAŻNE: fetchReply musi być true, żeby mieć msg.id
+        // 1. Najpierw wysyłamy wiadomość
         const msg = await interaction.reply({
             embeds: [embed],
-            components: [
-                new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`join_giveaway_${msg.id}`) // POPRAWIONE
-                        .setLabel('Dołącz 🎉')
-                        .setStyle(ButtonStyle.Success)
-                )
-            ],
             fetchReply: true
+        });
+
+        // 2. Teraz tworzymy przycisk z poprawnym ID
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`join_giveaway_${msg.id}`)
+                .setLabel('Dołącz 🎉')
+                .setStyle(ButtonStyle.Success)
+        );
+
+        await msg.edit({
+            components: [row]
         });
 
         const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
