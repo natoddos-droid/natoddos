@@ -116,7 +116,7 @@ module.exports = {
             }, 3000);
         }
 
-        // --- GIVEAWAY JOIN / LEAVE (PER GIVEAWAY ID) ---
+        // --- GIVEAWAY JOIN / LEAVE ---
         if (interaction.isButton() && interaction.customId.startsWith('join_giveaway_')) {
 
             const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
@@ -131,7 +131,6 @@ module.exports = {
 
             const g = db.giveaways[giveawayId];
 
-            // Jeśli user już jest → usuń go
             if (g.participants.includes(interaction.user.id)) {
 
                 g.participants = g.participants.filter(id => id !== interaction.user.id);
@@ -143,7 +142,6 @@ module.exports = {
                 });
             }
 
-            // Jeśli user nie jest → dodaj go
             g.participants.push(interaction.user.id);
             fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
@@ -171,6 +169,46 @@ module.exports = {
                 embeds: [embed],
                 ephemeral: true
             });
+        }
+
+        // --- PANEL BOOSTÓW (SELECT MENU) ---
+        if (interaction.isStringSelectMenu() && interaction.customId === 'boost_menu') {
+
+            const choice = interaction.values[0];
+
+            if (choice === 'boost_1') {
+
+                const embed = new EmbedBuilder()
+                    .setColor('#b84dff')
+                    .setTitle('✨ Benefity za 1 Boost')
+                    .setDescription(
+                        `Za **jednego boosta** możesz otrzymać:\n\n` +
+                        `🟣 **Wybraną przez siebie ddosiarkę**\n\n` +
+                        `Dziękujemy za wspieranie NATØDDØS!`
+                    );
+
+                return interaction.reply({
+                    embeds: [embed],
+                    ephemeral: true
+                });
+            }
+
+            if (choice === 'boost_2') {
+
+                const embed = new EmbedBuilder()
+                    .setColor('#ff4db8')
+                    .setTitle('🚀 Benefity za 2 Boosty')
+                    .setDescription(
+                        `Za **dwa boosty** możesz otrzymać:\n\n` +
+                        `💎 **Jeszcze niewypuszczoną przez nas ddosiarkę** (early access)\n\n` +
+                        `Dziękujemy za wspieranie NATØDDØS!`
+                    );
+
+                return interaction.reply({
+                    embeds: [embed],
+                    ephemeral: true
+                });
+            }
         }
     },
 };
