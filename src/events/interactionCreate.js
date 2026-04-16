@@ -120,7 +120,6 @@ module.exports = {
         if (interaction.isButton() && interaction.customId.startsWith('join_giveaway_')) {
 
             const db = JSON.parse(fs.readFileSync('./giveaways.json', 'utf8'));
-
             const giveawayId = interaction.customId.replace('join_giveaway_', '');
 
             if (!db.giveaways[giveawayId]) {
@@ -136,7 +135,6 @@ module.exports = {
             if (g.participants.includes(interaction.user.id)) {
 
                 g.participants = g.participants.filter(id => id !== interaction.user.id);
-
                 fs.writeFileSync('./giveaways.json', JSON.stringify(db, null, 4));
 
                 return interaction.reply({
@@ -151,6 +149,26 @@ module.exports = {
 
             return interaction.reply({
                 content: '🎉 Dołączyłeś do giveaway!',
+                ephemeral: true
+            });
+        }
+
+        // --- PANEL CENNIKA ---
+        if (interaction.isButton() && interaction.customId === 'show_price_list') {
+
+            const embed = new EmbedBuilder()
+                .setColor('#2b2d31')
+                .setTitle('💰 Cennik NATØDDØS')
+                .setDescription(
+                    `**Nazwa:** NATØ DDOS\n` +
+                    `**Miesiąc użytkowania:** 40 zł\n` +
+                    `**Rok użytkowania:** 60 zł\n` +
+                    `**Na zawsze:** 80 zł\n\n` +
+                    `🛒 **Do zakupu zapraszamy w ticketach!**`
+                );
+
+            return interaction.reply({
+                embeds: [embed],
                 ephemeral: true
             });
         }
